@@ -18,43 +18,222 @@ class UserAccountList(APIView):
 
     def post(self,request):
         email = request.POST['email']
-        name = request.POSt['name']
+        name = request.POST['name']
         password =  request.POST['password']
-        types = request.POST['type']
+        db = get_user_model()
+        
+        try:
+            user = db.objects.create_user(email=email,name=name,password=password)
+            res = dict()
+            res['id'] = user.id
+            res['email'] = user.email
+            res['name'] = user.name
+            res['status'] = 200
+        except Exception as e:
+            res = dict()
+            res['id'] = None
+            res['email'] = email
+            res['name'] = name
+            res['status'] = 500
+            res['error'] = str(e)
+        return JsonResponse(res,safe=False)
 
-        if types == 'user':
-            db = get_user_model()
+class RightGroupsList(APIView):
 
-            try:
-                user = db.objects.create_user(email=email,name=name,password=password)
-                
-                res = {
-                    'id':user.id,
-                    'email':user.email,
-                    'name':user.name,
-                    'status': 200
-                }
-                
-            except Exception as e:
-                res = {
-                    'id':None,
-                    'email':email,
-                    'name':name,
-                    'status': 500,
-                    'error': str(e)
-                }
-            res = json.dumps(res)
-            return JsonResponse(res)
-        else:
+    def get(self,request):
+        groups = RightGroups.objects.all()
+        serializer = RightGroupsSerializer(groups,many=True)
+        return Response(serializer.data)
+
+    def post(self,request):
+        try:
+            name = request.POST['name']
+            ins = RightGroups(name=name)
+            ins.save()
             res = {
-                    'id':None,
-                    'email':None,
-                    'name':None,
-                    'status': 500,
-                    'error': str(e)
+                'id':ins.id,
+                'name' : name,
+                'status' : 200,
+            }
+            return JsonResponse(res)
+        except Exception as e:
+            res = {
+                'status' : 500,
+                'error' : str(e)
+            }
+            return JsonResponse(res)
+    
+    def put(self,request):
+        try:
+            types = request.POST['type']
+            id = request.POST['id']
+            ins = RightGroups.objects.filter(id=id)
+
+            if len(ins) == 1:
+                ins = ins[0]
+                if types == 'inactivate':
+                    ins.is_active = False
+                    ins.save()
+                    res = {
+                        'status' : 200,
+                        'message' : 'Right Group Inactivated'
+                    }
+                elif types == 'activate':
+                    ins.is_active = True
+                    ins.save()
+                    res = {
+                        'status' : 200,
+                        'message' : 'Right Group Activated'
+                    }
+                else:
+                    res = {
+                        'status' : 400,
+                        'message' : 'Bad Request Type'
+                    }
+            else:
+                res = {
+                    'status' : 404,
+                    'error' : 'No Right Group Exist With Given Id'
                 }
-            res = json.dumps(res)
+            
+            return JsonResponse(res)
+        except Exception as e:
+            res = {
+                    'status' : 500,
+                    'error' : str(e)
+                }
+            return JsonResponse(res)
+    
+    def delete(self,request):
+        try:
+            id = request.POST['id']
+            ins = RightGroups.objects.filter(id=id)
+            if len(ins) == 1:
+                ins = ins[0]
+                ins.delete()
+                res = {
+                    'status' : 200,
+                    'message' : 'Right Group Deleted Successfully'
+                }
+            else:
+                res = {
+                    'status' : 404,
+                    'error' : 'No Right Group Present With Given Id'
+                }
+            return JsonResponse(res)
+        except Exception as e:
+            res = {
+                    'status' : 500,
+                    'error' : str(e)
+                }
             return JsonResponse(res)
         
+class RightsList(APIView):
+
+    def get(self,request):
+        rights = Rights.objects.all()
+        serializer = RightsSerializer(rights,many=True)
+        return Response(serializer.data)
+    
+    def post(self,request):
+        try:
+            name = request.POST['name']
+            group_id =  request.POST['groupid']
+            group_ins = RightGroups.objects.filter(id=group_id)
+            if len(group_ins) == 1:
+                group_ins = group_ins[0]
+                if group_ins.is_active == True:
+                    right_ins = Rights(name=name,right_group=group_ins)
+                    right_ins.save()
+                    res = {
+                        'status' : 200,
+                        'id' : right_ins.id,
+                        'name' : name,
+                        'message' : 'Right successfully created'
+                    }
+                else:
+                    res = {
+                        'status' : 403,
+                        'error' : 'Right Group is inactive'
+                    }
+            else:
+                res = {
+                    'status' : 404,
+                    'error' : 'Given Right Group is not present'
+                }
+            return JsonResponse(res)
+        except Exception as e:
+            res = {
+                'status' : 500,
+                'error' : str(e)
+            }
+            return JsonResponse(res)
+    
+    def put(self,request):
+        try:
+            types = request.POST['type']
+            id = request.POST['id']
+            ins = Rights.objects.filter(id=id)
+
+            if len(ins) == 1:
+                ins = ins[0]
+                if types == 'inactivate':
+                    ins.is_active = False
+                    ins.save()
+                    res = {
+                        'status' : 200,
+                        'message' : 'Right Inactivated'
+                    }
+                elif types == 'activate':
+                    ins.is_active = True
+                    ins.save()
+                    res = {
+                        'status' : 200,
+                        'message' : 'Right Activated'
+                    }
+                else:
+                    res = {
+                        'status' : 400,
+                        'message' : 'Bad Request Type'
+                    }
+            else:
+                res = {
+                    'status' : 404,
+                    'error' : 'No Right Exist With Given Id'
+                }
+            
+            return JsonResponse(res)
+        except Exception as e:
+            res = {
+                    'status' : 500,
+                    'error' : str(e)
+                }
+            return JsonResponse(res)
+    
+    def delete(self,request):
+        try:
+            id = request.POST['id']
+            ins = Rights.objects.filter(id=id)
+            if len(ins) == 1:
+                ins = ins[0]
+                ins.delete()
+                res = {
+                    'status' : 200,
+                    'message' : 'Right Deleted Successfully'
+                }
+            else:
+                res = {
+                    'status' : 404,
+                    'error' : 'No Right Present With Given Id'
+                }
+            return JsonResponse(res)
+        except Exception as e:
+            res = {
+                    'status' : 500,
+                    'error' : str(e)
+                }
+            return JsonResponse(res)
+
+
 
 

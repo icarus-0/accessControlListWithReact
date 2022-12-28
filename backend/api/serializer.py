@@ -4,7 +4,7 @@ from .models import *
 class UserAccountSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserAccount
-        fields = ('email','name','is_staff')
+        fields = ('id','email','name','is_staff')
 
 class RightGroupsSerializer(serializers.ModelSerializer):
     class Meta:
