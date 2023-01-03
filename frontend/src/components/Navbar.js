@@ -1,24 +1,24 @@
 import React from "react";
-import { NavLink } from "reactstrap";
+import { Link } from "react-router-dom";
 
 function NavBar() {
   return (
     <nav className="navbar navbar-expand-lg bg-body-tertiary">
       <div className="container-fluid">
-        <NavLink className="navbar-brand" to="#">
+        <Link className="navbar-bnpm i rand" to="/">
           Access Control
-        </NavLink>
+        </Link>
         <div className="collapse navbar-collapse" id="navbarNav">
           <ul className="navbar-nav">
             <li className="nav-item">
-              <NavLink className="nav-link active" aria-current="page" to="#">
+              <Link className="nav-link active" to="/users">
                 Users
-              </NavLink>
+              </Link>
             </li>
             <li className="nav-item">
-              <NavLink className="nav-link" to="#">
+              <Link className="nav-link" to="/groups">
                 Groups
-              </NavLink>
+              </Link>
             </li>
           </ul>
         </div>
